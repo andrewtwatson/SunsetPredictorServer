@@ -43,4 +43,6 @@ def createUser(request):
     Creates a new user and returns the new user ID.
     """
     u = User.createNewUser(timezone.now())
-    return HttpResponse(str(u.user_id), status=201)
+    ret = '{"user_id": "' + u.user_id + '", "secret_key": "' + u.secret_key + '"}'
+    # TODO write tests for secret id, change that into a template, start checking for id on posts
+    return HttpResponse(ret, status=201)

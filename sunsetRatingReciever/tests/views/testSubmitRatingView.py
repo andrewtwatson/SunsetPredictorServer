@@ -1,3 +1,4 @@
+import os, sys
 from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
@@ -72,15 +73,19 @@ class SubmitRatingViewTestCase(TestCase):
         self.assertEqual(response.content.decode('UTF-8'), '')
         self.assertEqual(u.sunsetratingentry_set.count(), 0)
 
-    def test_submit_malformed_rating_view(self):
+    def test_submit_malformed_rating_view_debug_false(self):
         """
-        Run through the malformed rating view with debug as true and false
+        Run through the malformed rating view with debug as false
         """
-        # run through normal, debug=false
         self.submitMalformedRatingViewWithDebugOption(False)
+        
+    def test_submit_malformed_rating_view_debug_true(self):
+        """
+        Run through the malformed rating view with debug as false
+        This prints all the "Bad Requests" when the tests are run, nothing I an do about it.
+        """
         with self.settings(DEBUG=True):
-            self.submitMalformedRatingViewWithDebugOption(True)
-
+           self.submitMalformedRatingViewWithDebugOption(True)
 
     def submitMalformedRatingViewWithDebugOption(self, debug):
         """

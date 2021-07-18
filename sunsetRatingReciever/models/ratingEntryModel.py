@@ -1,28 +1,6 @@
 from django.db import models
 from django.utils import timezone
-
-class User(models.Model):
-    """
-    Holds information about each user. Just an ID and a origination date for now 
-    """
-
-    # When a user is created, send this to the client
-    user_id = models.BigAutoField(primary_key=True)
-    first_login_date = models.DateTimeField()
-    # Set to true once the client sends confirmation that the user_id was saved.
-    setup_confirmed = models.BooleanField(default=False)
-    # if for whatever reason the user should be deleted, set to true
-    deleted = models.BooleanField(default=False)
-
-    @staticmethod
-    def createNewUser(dateTime=timezone.now()):
-        """
-        Creates and returns a new user.
-        """
-        u = User(first_login_date=dateTime)
-        u.save()
-        return u
-
+from .userModel import User
 
 class SunsetRatingEntry(models.Model):
     """
