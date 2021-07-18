@@ -45,4 +45,4 @@ def _generateSecretKey():
     Generates a random string of length 20 with letters and numbers to be stored 
     as a user's secret key.
     """
-    return ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(20))
+    return ''.join(SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(20))

@@ -18,7 +18,7 @@ class SunsetRatingEntry(models.Model):
     # Everything below this should have a default of null
 
     @staticmethod
-    def createEntry(user_id, rating, longitude, latitude, date_time=timezone.now()):
+    def createEntry(user_id, postedSecretKey, rating, longitude, latitude, date_time=timezone.now()):
         """
         Creates a new datum entry with the given parameters.
         """
@@ -26,6 +26,8 @@ class SunsetRatingEntry(models.Model):
         user = User.objects.get(pk=user_id)
         if user_id < 0:
             raise ValueError('user_id is negative')
+        if not user.authenticateUser(postedSecretKey):
+            raise PermissionError('Incorrect secret key')
         if rating < 0.0 or rating > 10.0:
             raise ValueError('rating outside of range [0..10]')
         if longitude < -180.0 or longitude > 180.0:
