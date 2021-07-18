@@ -12,7 +12,6 @@ def compliantPostDataFactory():
         }
 
 url = reverse('sunsetRatingReciever:submitRating')
-print('debug: ', settings.DEBUG)
 
 class SubmitRatingViewTestCase(TestCase):
     
@@ -75,21 +74,29 @@ class SubmitRatingViewTestCase(TestCase):
 
     def test_submit_malformed_rating_view(self):
         """
+        Run through the malformed rating view with debug as true and false
+        """
+        # run through normal, debug=false
+        self.submitMalformedRatingViewWithDebugOption(False)
+        with self.settings(DEBUG=True):
+            self.submitMalformedRatingViewWithDebugOption(True)
+
+
+    def submitMalformedRatingViewWithDebugOption(self, debug):
+        """
         Tests submitting bad datatyped ratings to the server
         """
         
         # setup for tests
-        
         u = User.createNewUser()
-        self.assertEqual(u.user_id, 1)
 
         # try to send a good post except the user_id is alphenumeric
         data = compliantPostDataFactory()
         data['user_id'] = '12abcd'
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, 400)
-        if settings.DEBUG:
-            self.assertContains(response.content, 'ValueError')
+        if debug:
+            self.assertIn('ValueError', response.content.decode('UTF-8'))
         else:
             self.assertEqual(response.content.decode('UTF-8'), '')
         self.assertEqual(u.sunsetratingentry_set.count(), 0)
@@ -99,8 +106,8 @@ class SubmitRatingViewTestCase(TestCase):
         data['rating'] = '12abcd'
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, 400)
-        if settings.DEBUG:
-            self.assertContains(response.content, 'ValueError')
+        if debug:
+            self.assertIn('ValueError', response.content.decode('UTF-8'))
         else:
             self.assertEqual(response.content.decode('UTF-8'), '')
         self.assertEqual(u.sunsetratingentry_set.count(), 0)
@@ -110,8 +117,8 @@ class SubmitRatingViewTestCase(TestCase):
         data['rating'] = '-7.1'
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, 400)
-        if settings.DEBUG:
-            self.assertContains(response.content, 'ValueError')
+        if debug:
+            self.assertIn('ValueError', response.content.decode('UTF-8'))
         else:
             self.assertEqual(response.content.decode('UTF-8'), '')
         self.assertEqual(u.sunsetratingentry_set.count(), 0)
@@ -121,8 +128,8 @@ class SubmitRatingViewTestCase(TestCase):
         data['rating'] = '10.2'
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, 400)
-        if settings.DEBUG:
-            self.assertContains(response.content, 'ValueError')
+        if debug:
+            self.assertIn('ValueError', response.content.decode('UTF-8'))
         else:
             self.assertEqual(response.content.decode('UTF-8'), '')
         self.assertEqual(u.sunsetratingentry_set.count(), 0)

@@ -11,4 +11,4 @@ Environment Variables Set:
 - set DJANGO_SETTINGS_MODULE=SunsetPredictorServer.settings
   - Just make a second settings file for production and set a different environment variable on the main server to point to that one
 
-//TODO make the settings.DEBUG work
+//TODO commit, then search code on github for a print statement

@@ -31,7 +31,7 @@ def submitRating(request):
         message = (str(type(err)) + err.args[0]) if settings.DEBUG else ''
         return HttpResponse(message, status=400)
     except (User.DoesNotExist) as err:
-        message = (str(type(err)) + err.args[0]) if True else ''
+        message = (str(type(err)) + err.args[0]) if settings.DEBUG else ''
         return HttpResponse(message, status=403)
     else:
         return HttpResponse('at sunsetRatingReciever/submitRating/', status=201)
