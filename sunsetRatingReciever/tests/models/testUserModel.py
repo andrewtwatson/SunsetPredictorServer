@@ -4,11 +4,26 @@ from sunsetRatingReciever.models import User, SunsetRatingEntry
 class UserModelTestCase(TestCase):
     def test_new_user_model(self):
         """
-        Tests the new user model
+        Tests the new user model and finish setup of user
         """
         u1 = User.createNewUser()
         self.assertEqual(u1.user_id, 1)
         self.assertEqual(u1.setup_confirmed, False)
+        self.assertEqual(u1.deleted, False)
+        self.assertEqual(len(u1.secret_key), 20)
+
+        # finish setup good
+        u1.finishSetup(u1.secret_key)
+        self.assertEqual(u1.user_id, 1)
+        self.assertEqual(u1.setup_confirmed, True)
+        self.assertEqual(u1.deleted, False)
+        self.assertEqual(len(u1.secret_key), 20)
+
+        # finish setup duplicate
+        with self.assertRaises(KeyError):
+            u1.finishSetup(u1.secret_key)
+        self.assertEqual(u1.user_id, 1)
+        self.assertEqual(u1.setup_confirmed, True)
         self.assertEqual(u1.deleted, False)
         self.assertEqual(len(u1.secret_key), 20)
 
@@ -18,11 +33,21 @@ class UserModelTestCase(TestCase):
         self.assertEqual(len(u2.secret_key), 20)
         self.assertNotEqual(u1.secret_key, u2.secret_key)
 
+        # finish setup bad key
+        with self.assertRaises(PermissionError):
+            u2.finishSetup('abcd')
+        self.assertEqual(u2.user_id, 2)
+        self.assertEqual(u2.setup_confirmed, False)
+        self.assertEqual(len(u2.secret_key), 20)
+        self.assertNotEqual(u1.secret_key, u2.secret_key)
+
+
     def test_authenticate_user(self):
         """
         test the user.authenticateUser method
         """
         u1 = User.createNewUser()
+        u1.finishSetup(u1.secret_key)
 
         # test working
         self.assertTrue(u1.authenticateUser(u1.secret_key))

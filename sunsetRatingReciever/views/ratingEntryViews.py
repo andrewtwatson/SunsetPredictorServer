@@ -12,6 +12,7 @@ def submitRating(request):
     Returns status of:
      - 201 if submitted correctly
      - 400 if the post request is malformed (missing data, etc)
+     - 401 if the secret key is wrong
      - 403 if the user is not in the database
     """
     try:

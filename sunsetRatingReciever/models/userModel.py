@@ -26,9 +26,10 @@ class User(models.Model):
     def authenticateUser(self, postedSecretKey):
         """
         Tests the secret key sent in the post request with the one stored for this user.
+        Also checks that the user has been set up and is not deleted
         Return true if they are the same, false otherwise.
         """
-        return self.secret_key == postedSecretKey
+        return self.deleted == False and self.setup_confirmed == True and self.secret_key == postedSecretKey
 
     @staticmethod
     def createNewUser(dateTime=timezone.now()):
@@ -39,6 +40,18 @@ class User(models.Model):
         u = User(secret_key=secretKey, first_login_date=dateTime)
         u.save()
         return u
+
+    def finishSetup(self, postedSecretKey):
+        # if already setup or deleted, throw error
+        if self.setup_confirmed or self.deleted:
+            raise KeyError('User is already set up or deleted')
+
+        if self.secret_key != postedSecretKey:
+            raise PermissionError('Incorrect secret key')
+
+        # change setup_confirmed to true
+        self.setup_confirmed = True
+        self.save()
 
 def _generateSecretKey():
     """

@@ -7,4 +7,5 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('submitRating/', views.submitRating, name='submitRating'),
     path('createUser/', views.createUser, name='createUser'),
+    path('finishUserSetup/', views.finishUserSetup, name='finishUserSetup')
 ]

@@ -27,7 +27,7 @@ class SunsetRatingEntry(models.Model):
         if user_id < 0:
             raise ValueError('user_id is negative')
         if not user.authenticateUser(postedSecretKey):
-            raise PermissionError('Incorrect secret key')
+            raise PermissionError('Incorrect secret key or not set up or deleted')
         if rating < 0.0 or rating > 10.0:
             raise ValueError('rating outside of range [0..10]')
         if longitude < -180.0 or longitude > 180.0:
