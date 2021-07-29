@@ -46,4 +46,4 @@ def finishUserSetup(request):
         return HttpResponse(message, status=403)
 
     else:
-        return HttpResponse('at sunsetRatingReciever/finishUserSetup/', status=201)
+        return HttpResponse('', status=201)

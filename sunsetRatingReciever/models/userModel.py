@@ -29,7 +29,7 @@ class User(models.Model):
         Also checks that the user has been set up and is not deleted
         Return true if they are the same, false otherwise.
         """
-        return self.deleted == False and self.setup_confirmed == True and self.secret_key == postedSecretKey
+        return (not self.deleted) and self.setup_confirmed and self.secret_key == postedSecretKey
 
     @staticmethod
     def createNewUser(dateTime=timezone.now()):

@@ -7,6 +7,7 @@ class SunsetModelTestCase(TestCase):
         Test making an entry that is illegal
         """
         u = User.createNewUser()
+        u.finishSetup(u.secret_key)
 
         # make an entry for a user that doesn't exist yet
         with self.assertRaises(User.DoesNotExist):
@@ -28,6 +29,7 @@ class SunsetModelTestCase(TestCase):
         Test making a legal entry
         """
         u = User.createNewUser()
+        u.finishSetup(u.secret_key)
 
         e = SunsetRatingEntry.createEntry(u.user_id, u.secret_key, 5.5, 12.789, -12.78)
         self.assertEquals(u.sunsetratingentry_set.count(), 1)

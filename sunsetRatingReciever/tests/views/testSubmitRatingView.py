@@ -1,22 +1,7 @@
-#import os, sys
-#from contextlib import ContextDecorator, redirect_stderr
 from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
 from sunsetRatingReciever.models import User, SunsetRatingEntry
-
-#class disableStderr(ContextDecorator):
-#    def __enter__(self):
-#        """
-#        Disable the stderr, send it to devnull
-#        """
-#        redirect_stderr(os.devnull)
-
-#    def __exit__(self, *exc):
-#        """
-#        Reset the stderr to normal stderr
-#        """
-#        redirect_stderr(sys.__stderr__)
 
 def compliantPostDataFactory(secretKey):
     return {
@@ -55,6 +40,7 @@ class SubmitRatingViewTestCase(TestCase):
         # create a user
         u = User.createNewUser()
         skey = u.secret_key
+        u.finishSetup(skey)
         self.assertEqual(u.user_id, 1)
 
         # try to send a good post except no user_id
@@ -104,14 +90,13 @@ class SubmitRatingViewTestCase(TestCase):
         self.submitMalformedRatingViewWithDebugOption(False)
     
     
-    #@disableStderr()
-    def test_submit_malformed_rating_view_debug_true(self):
-        """
-        Run through the malformed rating view with debug as false
-        This prints all the "Bad Requests" when the tests are run, nothing I an do about it.
-        """
-        with self.settings(DEBUG=True):
-           self.submitMalformedRatingViewWithDebugOption(True)
+    #def test_submit_malformed_rating_view_debug_true(self):
+    #    """
+    #    Run through the malformed rating view with debug as false
+    #    This prints all the "Bad Requests" when the tests are run, nothing I an do about it.
+    #    """
+    #    with self.settings(DEBUG=True):
+    #       self.submitMalformedRatingViewWithDebugOption(True)
 
     def submitMalformedRatingViewWithDebugOption(self, debug):
         """
@@ -121,6 +106,7 @@ class SubmitRatingViewTestCase(TestCase):
         # setup for tests
         u = User.createNewUser()
         skey = u.secret_key
+        u.finishSetup(skey)
         self.assertEqual(1, u.user_id)
 
         # try to send a good post except the user_id is alphenumeric
@@ -189,6 +175,7 @@ class SubmitRatingViewTestCase(TestCase):
         # create a user
         u = User.createNewUser()
         skey = u.secret_key
+        u.finishSetup(skey)
         self.assertEqual(u.user_id, 1)
         self.assertEqual(u.sunsetratingentry_set.count(), 0)
 

@@ -24,6 +24,7 @@ class SunsetRatingEntry(models.Model):
         """
 
         user = User.objects.get(pk=user_id)
+
         if user_id < 0:
             raise ValueError('user_id is negative')
         if not user.authenticateUser(postedSecretKey):

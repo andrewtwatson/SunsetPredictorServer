@@ -64,3 +64,19 @@ class UserModelTestCase(TestCase):
             toReplace = 'b'
         skey = toReplace + u1.secret_key[1:]
         self.assertFalse(u1.authenticateUser(skey))
+
+    def test_deleted_user(self):
+        """
+        If the user is deleted, nothing should work.
+        """
+        u1 = User.createNewUser()
+        u1.finishSetup(u1.secret_key)
+        u1.deleted = True
+        u1.save()
+
+        # test that authenticate fails
+        self.assertFalse(u1.authenticateUser(u1.secret_key))
+
+        # test that submiting an entry fails
+        with self.assertRaises(PermissionError):
+            SunsetRatingEntry.createEntry(u1.user_id, u1.secret_key, 1.2, 34, 56)

@@ -1,4 +1,4 @@
-from .userViews import createUser
+from .userViews import createUser, finishUserSetup
 from .ratingEntryViews import submitRating
 
 def index(request):
