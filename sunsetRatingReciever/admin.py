@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, SunsetRatingEntry
+from .models import User, SunsetRatingEntry, Error
 
 class RatingInLine(admin.TabularInline):
     model = SunsetRatingEntry
@@ -11,3 +11,4 @@ class UserAdmin(admin.ModelAdmin):
 
 admin.site.register(User, UserAdmin)
 admin.site.register(SunsetRatingEntry)
+admin.site.register(Error)

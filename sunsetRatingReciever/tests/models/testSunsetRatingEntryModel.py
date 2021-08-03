@@ -1,5 +1,6 @@
 ﻿from django.test import TestCase
-from sunsetRatingReciever.models import User, SunsetRatingEntry
+from django.utils import timezone
+from sunsetRatingReciever.models import User, SunsetRatingEntry, Error
 
 class SunsetModelTestCase(TestCase):
     def test_bad_entry(self):
@@ -34,3 +35,28 @@ class SunsetModelTestCase(TestCase):
         e = SunsetRatingEntry.createEntry(u.user_id, u.secret_key, 5.5, 12.789, -12.78)
         self.assertEquals(u.sunsetratingentry_set.count(), 1)
         self.assertEquals(e.rating, 5.5)
+
+    
+    def test_finish_entry_bad(self):
+        """
+        Test things that would break the finish entry method
+        """
+        u = User.createNewUser()
+        u.finishSetup(u.secret_key)
+
+        # set entry manually
+        e = SunsetRatingEntry(user_id=u, date_time=timezone.now(), rating=5, longitude=-248, latitude=-689)
+        e.save()
+
+        result = e.finishEntry()
+        self.assertEqual(result, "")
+
+        # make sure an error entry has been made
+        error = Error.objects.get(pk=1)
+        self.assertEqual(error.type, 'open weather failure')
+        self.assertTrue('response code' in error.info)
+
+    def test_finish_entry_good(self):
+        """
+        Test that the finish entry method works and that all fields are filled in.
+        """
