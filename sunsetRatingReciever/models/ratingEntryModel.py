@@ -28,19 +28,19 @@ class SunsetRatingEntry(models.Model):
 
     # Everything below this should have a default of null
     # UTC time
-    sunset_time = models.DateTimeField('Date and Time of Sunset', null=True, default=None)
+    sunset_time = models.DateTimeField('Date and Time of Sunset', null=True, default=None, blank=True)
     # minutes between when submitted and sunset. may be negative
-    minutes_to_sunset = models.DecimalField(max_digits=6, decimal_places=1, null=True, default=None)
+    minutes_to_sunset = models.DecimalField(max_digits=6, decimal_places=1, null=True, default=None, blank=True)
 
     # weather conditions
-    cloud_cover_percent = models.IntegerField(null=True, default=None)
-    air_quality_index = models.IntegerField(null=True, default=None)
-    humidity = models.IntegerField(null=True, default=None)
-    temperature = models.DecimalField(max_digits=5, decimal_places=2, null=True, default=None)
-    air_pressure = models.IntegerField(null=True, default=None)
+    cloud_cover_percent = models.IntegerField(null=True, default=None, blank=True)
+    air_quality_index = models.IntegerField(null=True, default=None, blank=True)
+    humidity = models.IntegerField(null=True, default=None, blank=True)
+    temperature = models.DecimalField(max_digits=5, decimal_places=2, null=True, default=None, blank=True)
+    air_pressure = models.IntegerField(null=True, default=None, blank=True)
     # time between last rainfall and when the sunset was. Measured in hours.
-    time_from_last_rain_to_sunset = models.DecimalField(max_digits=5, decimal_places=2, null=True, default=None)
-    season = models.CharField(max_length=8, null=True, default=None)
+    time_from_last_rain_to_sunset = models.DecimalField(max_digits=5, decimal_places=2, null=True, default=None, blank=True)
+    season = models.CharField(max_length=8, null=True, default=None, blank=True)
 
     @staticmethod
     def createEntry(user_id, postedSecretKey, rating, longitude, latitude, date_time=timezone.now()):
@@ -80,7 +80,8 @@ class SunsetRatingEntry(models.Model):
             # get the weather api info
             # Using the historical api bc it has hisotry and current.
             # going to need the data from today and yesterday to get the last 24 hours of rain
-            currentUnixTime = int(datetime.now().timestamp())
+            # TODO its saying it in the future. Try subtracting a few more seconds
+            currentUnixTime = int(datetime.now().timestamp()) - 1
             weatherUrlNow = ("https://api.openweathermap.org/data/2.5/onecall/timemachine?"
                              "lat=%f&lon=%f&units=%s&dt=%d&appid=%s" 
                              % (self.latitude, self.longitude, "imperial", currentUnixTime, OPEN_WEATHER_API_KEY))
@@ -89,7 +90,7 @@ class SunsetRatingEntry(models.Model):
                                    "lat=%f&lon=%f&units=%s&dt=%d&appid=%s" 
                                    % (self.latitude, self.longitude, "imperial", currentUnixTime - 86400, OPEN_WEATHER_API_KEY))
             weatherResponseYesterday = requests.get(weatherUrlYesterday)
-            if weatherResponseNow.code > 200 or weatherResponseYesterday.code > 200:
+            if weatherResponseNow.status_code > 200 or weatherResponseYesterday.status_code > 200:
                 raise ValueError('response code above 200')
 
             weatherData = weatherResponseNow.json()
@@ -148,7 +149,7 @@ class SunsetRatingEntry(models.Model):
 
             # do seperate call for the air quality
             # TODO
-            self.air_quality_index = weatherData['list'][0]['main']['aqi']
+            #self.air_quality_index = weatherData['list'][0]['main']['aqi']
 
             self.save()
         except Exception as exc:
@@ -161,8 +162,9 @@ class SunsetRatingEntry(models.Model):
                        "url yesterday: %s\n"
                        "response code yesterday: %d\n"
                        "response content yesterday: %s"
-                       % (str(exc), user_id, weatherUrlNow, weatherResponseNow.code, weatherResponseNow.content /
-                          weatherUrlYesterday, weatherResponseYesterday.code, weatherResponseYesterday.content)
+                       % (str(exc), self.user_id.user_id, weatherUrlNow, weatherResponseNow.status_code, weatherResponseNow.content, \
+                          weatherUrlYesterday, weatherResponseYesterday.status_code, weatherResponseYesterday.content)
                       )
             error = Error(date=timezone.now(), type='open weather failure', info=errInfo)
+            error.save()
             return ""
