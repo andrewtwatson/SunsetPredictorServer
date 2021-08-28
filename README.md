@@ -1,5 +1,5 @@
 # SunsetPredictorServer
-### Version 0.1.2 -- all tests passing locally, has not been deployed to remote yet, only does recieving
+### Version 0.1.3 -- all tests passing locally, has not been deployed to remote yet, only does recieving
 
 Server for the SunsetPredictor application. Will be deployed with Heroku.
 

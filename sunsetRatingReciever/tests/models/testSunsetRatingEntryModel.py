@@ -45,11 +45,11 @@ class SunsetModelTestCase(TestCase):
         u.finishSetup(u.secret_key)
 
         # set entry manually
-        e = SunsetRatingEntry(user_id=u, date_time=timezone.now(), rating=5, longitude=-248, latitude=-689)
+        e = SunsetRatingEntry(user_id=u, date_time=timezone.now(), rating=5.1, longitude=811.0, latitude=-559.0)
         e.save()
 
-        result = e.finishEntry()
-        self.assertEqual(result, "")
+        result = e.finishRatingEntry()
+        self.assertEqual(result, None)
 
         # make sure an error entry has been made
         error = Error.objects.get(pk=1)
@@ -60,3 +60,26 @@ class SunsetModelTestCase(TestCase):
         """
         Test that the finish entry method works and that all fields are filled in.
         """
+        u = User.createNewUser()
+        u.finishSetup(u.secret_key)
+
+        e = SunsetRatingEntry.createEntry(u.user_id, u.secret_key, 5.5, latitude=35.776, longitude=-78.6382)
+        # TODO i don't know why this isnt none
+        print(e.sunset_time)
+        e.finishRatingEntry()
+
+        # make sure there is no errors
+        self.assertEqual(0, len(Error.objects.all()))
+
+        # make sure the entry is all filled out
+        self.assertTrue(e.sunset_time != None)
+        self.assertTrue(e.minutes_to_sunset != None)
+        self.assertTrue(e.cloud_cover_percent != None)
+        self.assertTrue(e.air_quality_index != None)
+        self.assertTrue(e.humidity != None)
+        self.assertTrue(e.temperature != None)
+        self.assertTrue(e.air_pressure != None)
+        self.assertTrue(e.time_from_last_rain_to_sunset != None)
+        self.assertTrue(e.season != None)
+        
+        self.assertEqual(e.rating, 5.5)

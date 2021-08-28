@@ -22,8 +22,8 @@ class SunsetRatingEntry(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.PROTECT, db_column='user_id')
     # UTC time
     date_time = models.DateTimeField('Date and Time of Recording')
-    longitude = models.DecimalField(max_digits=8, decimal_places=6)
-    latitude = models.DecimalField(max_digits=8, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
     rating = models.DecimalField(max_digits=4, decimal_places=2)
 
     # Everything below this should have a default of null
@@ -81,7 +81,7 @@ class SunsetRatingEntry(models.Model):
             # Using the historical api bc it has hisotry and current.
             # going to need the data from today and yesterday to get the last 24 hours of rain
             # TODO its saying it in the future. Try subtracting a few more seconds
-            currentUnixTime = int(datetime.now().timestamp()) - 1
+            currentUnixTime = int(datetime.now().timestamp()) - 60
             weatherUrlNow = ("https://api.openweathermap.org/data/2.5/onecall/timemachine?"
                              "lat=%f&lon=%f&units=%s&dt=%d&appid=%s" 
                              % (self.latitude, self.longitude, "imperial", currentUnixTime, OPEN_WEATHER_API_KEY))
@@ -167,4 +167,4 @@ class SunsetRatingEntry(models.Model):
                       )
             error = Error(date=timezone.now(), type='open weather failure', info=errInfo)
             error.save()
-            return ""
+            #return ""
