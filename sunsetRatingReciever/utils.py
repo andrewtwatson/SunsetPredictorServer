@@ -17,4 +17,4 @@ def minutesDelta(t1, t2):
     t1 and t2 are unix times (that is, seconds since January 1, 1970)
     For a positive time, t1 should be before t2
     """
-    return round((t2 - t1) / 3600)
+    return round((t2 - t1) / 60)

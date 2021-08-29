@@ -7,6 +7,7 @@ from ..utils import hoursDelta, minutesDelta
 from pathlib import Path
 import requests
 import sys
+import traceback
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 sys.path.append(BASE_DIR)
 from sunsetConstants import OPEN_WEATHER_API_KEY, SUNRISE_SUNSET_API_KEY
@@ -35,6 +36,8 @@ class SunsetRatingEntry(models.Model):
     # weather conditions
     cloud_cover_percent = models.IntegerField(null=True, default=None, blank=True)
     air_quality_index = models.IntegerField(null=True, default=None, blank=True)
+    # measured in μg/m3
+    air_quality_pm10 = models.DecimalField(max_digits=15, decimal_places=10, null=True, default=None, blank=True)
     humidity = models.IntegerField(null=True, default=None, blank=True)
     temperature = models.DecimalField(max_digits=5, decimal_places=2, null=True, default=None, blank=True)
     air_pressure = models.IntegerField(null=True, default=None, blank=True)
@@ -75,12 +78,19 @@ class SunsetRatingEntry(models.Model):
         if self.rating == None or self.longitude == None or self.latitude == None:
             raise ValueError('entry not set up yet')
 
+        # define variables for error use
+        weatherUrlNow = None
+        weatherResponseNow = None
+        weatherUrlYesterday = None
+        weatherResponseYesterday = None
+        aqiUrl = None
+        aqiResponse = None
+
         # extract weather data
         try:
             # get the weather api info
             # Using the historical api bc it has hisotry and current.
             # going to need the data from today and yesterday to get the last 24 hours of rain
-            # TODO its saying it in the future. Try subtracting a few more seconds
             currentUnixTime = int(datetime.now().timestamp()) - 60
             weatherUrlNow = ("https://api.openweathermap.org/data/2.5/onecall/timemachine?"
                              "lat=%f&lon=%f&units=%s&dt=%d&appid=%s" 
@@ -99,7 +109,7 @@ class SunsetRatingEntry(models.Model):
             sunsetUnixTime = int(weatherData['current']['sunset'])
             self.sunset_time = datetime.utcfromtimestamp(sunsetUnixTime)
             # if its almost 24 hours off bc of utc, add/sub 24 hours
-            minToSunset = minuteDelta(sunsetUnixTime)
+            minToSunset = minutesDelta(currentUnixTime, sunsetUnixTime)
             if minToSunset > 60 * 12:
                 minToSunset -= 60 * 12
             if minToSunset < -60 * 12:
@@ -131,39 +141,88 @@ class SunsetRatingEntry(models.Model):
             # figure out when the last rain was
             # start from now and go backwards until you hit 24 hours or the weather code says rain
             hoursSinceRain = 0
-            secondsOfLastRain = 0
+            unixTimeOfLastRain = 86400
+            dayData = weatherData
+            # this is how far back we've looked for rain in this day so far. Basically in index into the json response
+            hourCounter = -1
             while hoursSinceRain < 24:
-                weatherCode = None # TODO ( if hours=0: present, else go back in time)
-                # TODO current idea for this: make var `currentDayData`, and a counter to go back through that list, once you get to the end of the list
-                # reset the counter, change currentDayData to the other day.
+                # if first time through, use current. Otherwise use the hourly
+                thisHourWeatherData = None
+                if hourCounter == -1:
+                    thisHourWeatherData = dayData['current']
+                else:
+                    thisHourWeatherData = dayData['hourly'][hourCounter]
+                thisHourWeatherId = thisHourWeatherData['weather'][0]['id']
 
                 # see https://openweathermap.org/weather-conditions#Weather-Condition-Codes-2 for weather codes
-                if weatherCode <= 701:
-                    secondsOfLastRain = None # TODO
+                if thisHourWeatherId <= 701:
+                    unixTimeOfLastRain = thisHourWeatherData['dt']
                     break
+
+                hourCounter += 1
+                # see if we hit the end of this day, if so go to previous day
+                if hourCounter >= len(dayData['hourly']):
+                    dayData = yesterdayData
+                    hourCounter = 0
+
                 hoursSinceRain += 1
 
-            rainToSunset = timeDelta(secondsOfLastRain, sunsetUnixTime)
+            rainToSunset = hoursDelta(unixTimeOfLastRain, sunsetUnixTime)
             # the most to measure for rain is 24
-            self.rainToSunset = min(rainToSunset, 24)
+            self.time_from_last_rain_to_sunset = min(rainToSunset, 24)
 
             # do seperate call for the air quality
-            # TODO
-            #self.air_quality_index = weatherData['list'][0]['main']['aqi']
+            aqiUrl = ("https://api.openweathermap.org/data/2.5/air_pollution?"
+                             "lat=%f&lon=%f&appid=%s" 
+                             % (self.latitude, self.longitude, OPEN_WEATHER_API_KEY))
+            aqiResponse = requests.get(aqiUrl)
+            aqiData = aqiResponse.json()
+            self.air_quality_index = aqiData['list'][0]['main']['aqi']
+            self.air_quality_pm10 = aqiData['list'][0]['components']['pm10']
 
             self.save()
         except Exception as exc:
+            # make sure all variables are defined
+            if weatherUrlNow is None:
+                weatherUrlNow = "NONE"
+            if weatherResponseNow is None:
+                nowStatusCode = 999
+                nowContent = "NONE"
+            else:
+                nowStatusCode = weatherResponseNow.status_code
+                nowContent = weatherResponseNow.content
+            if weatherUrlYesterday is None:
+                weatherUrlYesterday = "NONE"
+            if weatherResponseYesterday is None:
+                yesterdayStatusCode = 999
+                yesterdayContent = "NONE"
+            else:
+                yesterdayStatusCode = weatherResponseYesterday.status_code
+                yesterdayContent = weatherResponseYesterday.content
+            if aqiUrl is None:
+                aqiUrl = "NONE"
+            if aqiResponse is None:
+                aqiStatusCode = 999
+                aqiContent = "NONE"
+            else:
+                aqiStatusCode = aqiResponse.status_code
+                aqiContent = aqiResponse.content
+
             errInfo = ("There was an error extracting the data from the weather api.\n"
                        "exception: %s\n"
+                       "traceback: %s\n"
                        "user_id: %d\n"
                        "url now: %s\n"
                        "response code now: %d\n"
                        "response content now: %s\n"
                        "url yesterday: %s\n"
                        "response code yesterday: %d\n"
-                       "response content yesterday: %s"
-                       % (str(exc), self.user_id.user_id, weatherUrlNow, weatherResponseNow.status_code, weatherResponseNow.content, \
-                          weatherUrlYesterday, weatherResponseYesterday.status_code, weatherResponseYesterday.content)
+                       "response content yesterday: %s\n"
+                       "url aqi: %s\n"
+                       "response code aqi: %d\n"
+                       "response content aqi: %s\n"
+                       % (str(exc), traceback.format_exc(), self.user_id.user_id, weatherUrlNow, nowStatusCode, nowContent, \
+                          weatherUrlYesterday, yesterdayStatusCode, yesterdayContent, aqiUrl, aqiStatusCode, aqiContent)
                       )
             error = Error(date=timezone.now(), type='open weather failure', info=errInfo)
             error.save()

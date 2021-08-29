@@ -64,9 +64,6 @@ class SunsetModelTestCase(TestCase):
         u.finishSetup(u.secret_key)
 
         e = SunsetRatingEntry.createEntry(u.user_id, u.secret_key, 5.5, latitude=35.776, longitude=-78.6382)
-        # TODO i don't know why this isnt none
-        print(e.sunset_time)
-        e.finishRatingEntry()
 
         # make sure there is no errors
         self.assertEqual(0, len(Error.objects.all()))

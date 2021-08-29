@@ -8,3 +8,10 @@ class Error(models.Model):
     type = models.CharField(max_length=100)
     # info of the error
     info = models.TextField()
+
+    def __str__(self) -> str:
+        """
+        Override string display info about the error
+        """
+        string = "date: " + str(self.date) + ", type: " + str(self.type) + ", info: " + str(self.info)
+        return string
