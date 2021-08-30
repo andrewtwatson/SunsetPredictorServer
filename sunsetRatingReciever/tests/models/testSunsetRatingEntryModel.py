@@ -71,12 +71,13 @@ class SunsetModelTestCase(TestCase):
         # make sure the entry is all filled out
         self.assertTrue(e.sunset_time != None)
         self.assertTrue(e.minutes_to_sunset != None)
-        self.assertTrue(e.cloud_cover_percent != None)
-        self.assertTrue(e.air_quality_index != None)
-        self.assertTrue(e.humidity != None)
+        self.assertTrue(0 <= e.cloud_cover_percent <= 100)
+        self.assertTrue(e.air_quality_index >= 0)
+        self.assertTrue(e.air_quality_pm10 >= 0)
+        self.assertTrue(0 <= e.humidity <= 100)
         self.assertTrue(e.temperature != None)
         self.assertTrue(e.air_pressure != None)
-        self.assertTrue(e.time_from_last_rain_to_sunset != None)
-        self.assertTrue(e.season != None)
+        self.assertTrue(0 <= e.time_from_last_rain_to_sunset <= 24)
+        self.assertTrue(e.season in ['summer', 'fall', 'winter', 'spring'])
         
         self.assertEqual(e.rating, 5.5)

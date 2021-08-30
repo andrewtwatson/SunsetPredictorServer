@@ -35,4 +35,4 @@ def submitRating(request):
         return HttpResponse(message, status=403)
     
     else:
-        return HttpResponse('at sunsetRatingReciever/submitRating/', status=201)
+        return HttpResponse('', status=201)

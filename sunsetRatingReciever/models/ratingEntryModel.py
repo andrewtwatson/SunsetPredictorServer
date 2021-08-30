@@ -107,7 +107,7 @@ class SunsetRatingEntry(models.Model):
             yesterdayData = weatherResponseYesterday.json()
 
             sunsetUnixTime = int(weatherData['current']['sunset'])
-            self.sunset_time = datetime.utcfromtimestamp(sunsetUnixTime)
+            self.sunset_time = timezone.make_aware(datetime.utcfromtimestamp(sunsetUnixTime))
             # if its almost 24 hours off bc of utc, add/sub 24 hours
             minToSunset = minutesDelta(currentUnixTime, sunsetUnixTime)
             if minToSunset > 60 * 12:
